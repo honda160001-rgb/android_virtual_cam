@@ -7,21 +7,28 @@ on:
 jobs:
   build:
     runs-on: ubuntu-latest
-
     steps:
       - name: Checkout
         uses: actions/checkout@v4
         with:
           submodules: recursive
 
-      - name: Set up JDK 11
+      # 1) JDK 17 só para o Android SDK
+      - name: Set up JDK 17 (for Android SDK)
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "17"
+
+      - name: Set up Android SDK
+        uses: android-actions/setup-android@v3
+
+      # 2) Troca para JDK 11 para compilar (compatível com AGP antigo)
+      - name: Set up JDK 11 (for build)
         uses: actions/setup-java@v4
         with:
           distribution: temurin
           java-version: "11"
-
-      - name: Set up Android SDK
-        uses: android-actions/setup-android@v3
 
       - name: Make gradlew executable
         run: chmod +x ./gradlew
@@ -29,7 +36,6 @@ jobs:
       - name: Build Debug APK
         run: ./gradlew clean :app:assembleDebug -x lint --no-daemon
 
-      # pega APK mesmo que o módulo não se chame "app"
       - name: Upload APK
         uses: actions/upload-artifact@v4
         with:
